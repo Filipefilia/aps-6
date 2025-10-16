@@ -81,6 +81,7 @@ python main.py
 Bash
 
 [UNDER DEVELOPMENT]
+```
 
 👥 Autores
 Nome do Aluno 1 - RA
