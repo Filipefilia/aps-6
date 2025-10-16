@@ -83,7 +83,8 @@ Bash
 [UNDER DEVELOPMENT]
 ```
 
-👥 Autores
+## 👥 Autores
+
 Nome do Aluno 1 - RA
 
 Nome do Aluno 2 - RA
