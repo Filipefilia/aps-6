@@ -16,19 +16,18 @@ O acesso é controlado por um esquema de três níveis de permissão, simulando 
 
 ## 🛠️ Tecnologias Utilizadas
 
-* **Python 3.10+**
-* **OpenCV (`opencv-python`):** Para captura e manipulação de imagem e vídeo em tempo real.
-* **face\_recognition:** Para detecção de rostos e extração das características faciais (encodings).
-* **dlib:** A biblioteca base para o `face_recognition`, contendo os modelos de Machine Learning.
-* **Pillow:** Para manipulação de objetos de imagem na interface gráfica.
-* **Tkinter:** Para a criação da interface gráfica (GUI) da aplicação.
+- **Python 3.10+**
+- **OpenCV (`opencv-python`):** Para captura e manipulação de imagem e vídeo em tempo real.
+- **face_recognition:** Para detecção de rostos e extração das características faciais (encodings).
+- **dlib:** A biblioteca base para o `face_recognition`, contendo os modelos de Machine Learning.
+- **Pillow:** Para manipulação de objetos de imagem na interface gráfica.
+- **Tkinter:** Para a criação da interface gráfica (GUI) da aplicação.
 
 ## 📂 Estrutura do Projeto
 
 O projeto está organizado da seguinte forma para garantir modularidade e clareza:
 
 . ├── config/ # Módulo de configuração centralizado │ ├── init.py │ └── config.py ├── controller/ # Módulo para a lógica de negócio │ ├── init.py │ └── register_user.py ├── dataset/ # Diretório onde as imagens dos usuários são salvas ├── venv/ # Ambiente virtual do Python (ignorado pelo Git) ├── .gitignore # Arquivo para ignorar o venv e outros arquivos ├── main.py # Ponto de entrada principal da aplicação ├── requirements.txt # Lista de dependências do projeto └── README.md # Documentação do projeto
-
 
 ## 🚀 Configuração do Ambiente
 
@@ -37,36 +36,76 @@ Siga os passos abaixo para configurar e executar o projeto em sua máquina local
 **1. Clone o repositório**
 
 ```bash
-git clone <https://github.com/Filipefilia/aps-6.git>
+git clone https://github.com/Filipefilia/aps-6.git
 cd aps-6
-2. Crie o Ambiente Virtual
+```
+
+**2. Instale as Dependências de Sistema**
+
+Para que a biblioteca `face_recognition` funcione, é necessário instalar algumas dependências no nível do sistema operacional.
+
+<br>
+
+**_Para Linux (Debian/Ubuntu)_**
+
+```bash
+sudo apt-get update && sudo apt-get install -y build-essential cmake python3-dev
+```
+
+**_Para macOS_**
+
+A maneira mais fácil é usar o gerenciador de pacotes [Homebrew](https://brew.sh/).
+
+```bash
+# Instala o Homebrew (caso não tenha)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Instala as dependências
+brew install cmake python
+```
+
+**_Para Windows_**
+
+A instalação no Windows é mais complexa e requer um compilador C++ e o CMake.
+
+1.  **Instale o Microsoft C++ Build Tools:**
+
+    - Acesse a [página de downloads do Visual Studio](https://visualstudio.microsoft.com/downloads/).
+    - Na seção "Ferramentas para Visual Studio", encontre e baixe o **"Build Tools for Visual Studio"**.
+    - Ao executar o instalador, selecione a carga de trabalho **"Desenvolvimento para desktop com C++"** e prossiga com a instalação.
+
+2.  **Instale o CMake:**
+    - Baixe o instalador na [página oficial do CMake](https://cmake.org/download/).
+    - Durante a instalação, marque a opção **"Add CMake to the system PATH"** para que ele possa ser encontrado pelo `pip`.
+
+Após instalar essas dependências, a instalação dos pacotes Python na próxima etapa deve funcionar corretamente.
+
+**3. Crie e Ative o Ambiente Virtual**
 
 É uma boa prática usar um ambiente virtual para isolar as dependências do projeto.
 
-Bash
+_No Linux ou macOS:_
 
-python -m venv venv
-3. Ative o Ambiente Virtual
-
-A ativação é necessária para garantir que as bibliotecas sejam instaladas no local correto.
-
-No Windows (PowerShell/CMD):
-
-Bash
-
-.\venv\Scripts\activate
-No Linux ou macOS:
-
-Bash
-
+```bash
+python3 -m venv venv
 source venv/bin/activate
-4. Instale as Dependências
+```
 
-O arquivo requirements.txt contém todas as bibliotecas necessárias. Instale-as com um único comando:
+_No Windows (PowerShell/CMD):_
 
-Bash
+```bash
+python -m venv venv
+.\venv\Scripts\activate
+```
 
+**4. Instale as Dependências do Python**
+
+Finalmente, instale todas as bibliotecas Python listadas no `requirements.txt` com um único comando:
+
+```bash
 pip install -r requirements.txt
+```
+
 ▶️ Como Executar
 O sistema opera em etapas. A aplicação principal é controlada pelo main.py, que exibirá um menu de opções.
 
@@ -76,11 +115,12 @@ Execute a aplicação principal e escolha a opção para cadastrar usuários. O 
 
 Bash
 
-python main.py 
+python main.py
 
 Bash
 
 [UNDER DEVELOPMENT]
+
 ```
 
 ## 👥 Autores
@@ -94,3 +134,4 @@ Nome do Aluno 3 - RA
 Pedro Ferreira - T202FE7
 
 Nome do Aluno 5 - RA
+```
