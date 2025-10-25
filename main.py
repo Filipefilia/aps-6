@@ -1,3 +1,5 @@
-from controller import register_user
+import tkinter as tk
+from view.app_gui import App
 
-register_user.register_new_user()
+if __name__ == '__main__':
+    App(tk.Tk(), "Controle de Acesso Facial")
