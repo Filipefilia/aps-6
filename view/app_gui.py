@@ -4,6 +4,7 @@ import cv2
 from PIL import Image, ImageTk
 from controller import recognize_user, register_user
 import time
+from config.config import REQUIRED_ACCESS_LEVEL
 
 class App:
     def __init__(self, window, window_title):
@@ -25,7 +26,7 @@ class App:
         self.last_seen_time = 0
 
         # --- Load Known Faces ---
-        self.known_face_encodings, self.known_face_names = recognize_user.load_known_faces()
+        self.known_face_encodings, self.known_face_names, self.known_face_access_levels = recognize_user.load_known_faces()
 
         # --- Widgets ---
         self.title_font = tkFont.Font(family="Helvetica", size=18, weight="bold")
@@ -128,7 +129,7 @@ class App:
 
             # 3. Reload known faces
             print("[GUI-INFO] Recarregando rostos conhecidos...")
-            self.known_face_encodings, self.known_face_names = recognize_user.load_known_faces()
+            self.known_face_encodings, self.known_face_names, self.known_face_access_levels = recognize_user.load_known_faces()
             self.status_label.config(text=f"Usuário {user_name} cadastrado!", fg="#3498db")
         else:
             print(f"[ERROR] Could not create directory for user {user_name}.")
@@ -139,8 +140,10 @@ class App:
 
         if ret:
             if self.is_recognition_running:
-                processed_frame, name = recognize_user.process_frame_for_recognition(frame, self.known_face_encodings, self.known_face_names)
-                self.update_status(name)
+                processed_frame, name, access_level = recognize_user.process_frame_for_recognition(
+                    frame, self.known_face_encodings, self.known_face_names, self.known_face_access_levels
+                )
+                self.update_status(name, access_level)
             else:
                 processed_frame = frame
 
@@ -149,9 +152,29 @@ class App:
         
         self.window.after(15, self.update)
 
-    def update_status(self, name):
+    def update_status(self, name, access_level):
         if name != "Unknown":
-            self.status_label.config(text="Acesso Garantido", fg="#2ecc71")
+            try:
+                user_level = int(access_level)
+                required_level = int(REQUIRED_ACCESS_LEVEL)
+                
+                access_granted = False
+                # Lógica de acesso exclusivo para o nível 3, conforme especificação do projeto
+                if required_level == 3:
+                    if user_level == 3:
+                        access_granted = True
+                # Lógica hierárquica para os outros níveis
+                else:
+                    if user_level >= required_level:
+                        access_granted = True
+
+                if access_granted:
+                    self.status_label.config(text=f"Acesso Garantido: {name} (Nível {user_level})", fg="#2ecc71")
+                else:
+                    self.status_label.config(text=f"Acesso Negado: Nível Insuficiente", fg="#e74c3c")
+
+            except (ValueError, TypeError):
+                self.status_label.config(text="Erro: Nível de acesso inválido", fg="#e74c3c")
         else:
             self.status_label.config(text="Acesso Negado", fg="#e74c3c")
 
