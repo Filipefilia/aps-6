@@ -47,6 +47,11 @@ def load_known_faces():
 
     return known_face_encodings, known_face_names, known_face_access_levels
 
+# Find the path to the haarcascade file more robustly
+cv2_base_dir = os.path.dirname(os.path.abspath(cv2.__file__))
+HAAR_CASCADE_PATH = os.path.join(cv2_base_dir, 'data', 'haarcascade_frontalface_default.xml')
+face_cascade = cv2.CascadeClassifier(HAAR_CASCADE_PATH)
+
 def process_frame_for_recognition(frame, known_face_encodings, known_face_names, known_face_access_levels):
     """
     Processes a single frame to detect and recognize faces.
@@ -64,7 +69,6 @@ def process_frame_for_recognition(frame, known_face_encodings, known_face_names,
         - The access level of the recognized person ("" if not recognized).
     """
     TOLERANCE = 0.6  # Lower is more strict
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
     # Use Haar Cascade for fast face location
     grey = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)

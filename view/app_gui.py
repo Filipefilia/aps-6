@@ -24,6 +24,7 @@ class App:
         self.is_recognition_running = False
         self.recognized_name = ""
         self.last_seen_time = 0
+        self.last_status_update = 0
 
         # --- Load Known Faces ---
         self.known_face_encodings, self.known_face_names, self.known_face_access_levels = recognize_user.load_known_faces()
@@ -45,10 +46,15 @@ class App:
         self.btn_frame = tk.Frame(window, bg="#2c3e50")
         self.btn_frame.pack(pady=10)
 
-        self.btn_access = tk.Button(self.btn_frame, text="Acessar Sistema", command=self.toggle_recognition, font=self.button_font, bg="#27ae60", fg="white", relief=tk.FLAT, padx=10)
+        # On macOS, buttons with custom background might not render text correctly until clicked.
+        # Using highlightbackground with the same color as bg is a common workaround.
+        btn_access_bg = "#27ae60"
+        btn_register_bg = "#3498db"
+
+        self.btn_access = tk.Button(self.btn_frame, text="Acessar Sistema", command=self.toggle_recognition, font=self.button_font, bg=btn_access_bg, fg="white", relief=tk.FLAT, padx=10, highlightbackground=btn_access_bg)
         self.btn_access.grid(row=0, column=0, padx=10)
 
-        self.btn_register = tk.Button(self.btn_frame, text="Cadastrar Usuário", command=self.open_registration_window, font=self.button_font, bg="#3498db", fg="white", relief=tk.FLAT, padx=10)
+        self.btn_register = tk.Button(self.btn_frame, text="Cadastrar Usuário", command=self.open_registration_window, font=self.button_font, bg=btn_register_bg, fg="white", relief=tk.FLAT, padx=10, highlightbackground=btn_register_bg)
         self.btn_register.grid(row=0, column=1, padx=10)
 
         # --- Camera Setup ---
@@ -60,15 +66,17 @@ class App:
     def toggle_recognition(self):
         self.is_recognition_running = not self.is_recognition_running
         if self.is_recognition_running:
-            self.btn_access.config(text="Parar Reconhecimento", bg="#c0392b")
-            self.status_label.config(text="")
+            self.btn_access.config(text="Parar Reconhecimento", bg="#c0392b", highlightbackground="#c0392b")
+            self.status_label.config(text="Iniciando reconhecimento...", fg="#ecf0f1")
+            self.last_status_update = time.time()
         else:
-            self.btn_access.config(text="Acessar Sistema", bg="#27ae60")
+            self.btn_access.config(text="Acessar Sistema", bg="#27ae60", highlightbackground="#27ae60")
+            self.status_label.config(text="")
 
     def open_registration_window(self):
         # Pause recognition
         self.is_recognition_running = False
-        self.btn_access.config(text="Acessar Sistema", bg="#27ae60")
+        self.btn_access.config(text="Acessar Sistema", bg="#27ae60", highlightbackground="#27ae60")
 
         # Create a new Toplevel window
         self.reg_window = tk.Toplevel(self.window)
@@ -96,7 +104,8 @@ class App:
         self.level_entry.pack(pady=5, padx=20, fill=tk.X)
 
         # Submit Button
-        submit_btn = tk.Button(self.reg_window, text="Salvar e Iniciar Captura", command=self.submit_registration, font=self.button_font, bg="#2980b9", fg="white", relief=tk.FLAT)
+        btn_submit_bg = "#2980b9"
+        submit_btn = tk.Button(self.reg_window, text="Salvar e Iniciar Captura", command=self.submit_registration, font=self.button_font, bg=btn_submit_bg, fg="white", relief=tk.FLAT, highlightbackground=btn_submit_bg)
         submit_btn.pack(pady=20)
 
         # Make the registration window modal
@@ -131,9 +140,11 @@ class App:
             print("[GUI-INFO] Recarregando rostos conhecidos...")
             self.known_face_encodings, self.known_face_names, self.known_face_access_levels = recognize_user.load_known_faces()
             self.status_label.config(text=f"Usuário {user_name} cadastrado!", fg="#3498db")
+            self.last_status_update = time.time()
         else:
             print(f"[ERROR] Could not create directory for user {user_name}.")
             self.status_label.config(text=f"Erro ao criar usuário {user_name}", fg="#e74c3c")
+            self.last_status_update = time.time()
 
     def update(self):
         ret, frame = self.vid.read()
@@ -150,20 +161,36 @@ class App:
             self.photo = ImageTk.PhotoImage(image=Image.fromarray(cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)))
             self.video_canvas.create_image(0, 0, image=self.photo, anchor=tk.NW)
         
+        # Clear status message after a delay
+        if time.time() - self.last_status_update > 4:
+            if self.is_recognition_running:
+                self.status_label.config(text="Procurando...", fg="#ecf0f1")
+            else:
+                self.status_label.config(text="")
+
         self.window.after(15, self.update)
 
     def update_status(self, name, access_level):
+        # Prevent flickering: only update if the name changes
+        if name == self.recognized_name:
+            if name != "Unknown":
+                self.last_seen_time = time.time() # Keep updating last seen time for known faces
+            return
+
+        self.recognized_name = name
+        
         if name != "Unknown":
+            self.last_seen_time = time.time()
             try:
                 user_level = int(access_level)
                 required_level = int(REQUIRED_ACCESS_LEVEL)
                 
                 access_granted = False
-                # Lógica de acesso exclusivo para o nível 3, conforme especificação do projeto
+                # Exclusive access logic for level 3
                 if required_level == 3:
                     if user_level == 3:
                         access_granted = True
-                # Lógica hierárquica para os outros níveis
+                # Hierarchical logic for other levels
                 else:
                     if user_level >= required_level:
                         access_granted = True
@@ -172,11 +199,17 @@ class App:
                     self.status_label.config(text=f"Acesso Garantido: {name} (Nível {user_level})", fg="#2ecc71")
                 else:
                     self.status_label.config(text=f"Acesso Negado: Nível Insuficiente", fg="#e74c3c")
+                self.last_status_update = time.time()
 
             except (ValueError, TypeError):
                 self.status_label.config(text="Erro: Nível de acesso inválido", fg="#e74c3c")
-        else:
-            self.status_label.config(text="Acesso Negado", fg="#e74c3c")
+                self.last_status_update = time.time()
+        
+        # Only show 'Access Denied' if an unknown face is persistent and no known face was seen recently
+        elif name == "Unknown":
+            if time.time() - self.last_seen_time > 2:
+                 self.status_label.config(text="Acesso Negado", fg="#e74c3c")
+                 self.last_status_update = time.time()
 
     def __del__(self):
         if self.vid.isOpened():

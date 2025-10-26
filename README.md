@@ -52,17 +52,27 @@ Para que a biblioteca `face_recognition` funcione, é necessário instalar algum
 sudo apt-get update && sudo apt-get install -y build-essential cmake python3-dev
 ```
 
-**_Para macOS_**
+***Para macOS***
 
-A maneira mais fácil é usar o gerenciador de pacotes [Homebrew](https://brew.sh/).
+A instalação requer as **Ferramentas de Linha de Comando do Xcode** (para o compilador C++) e o `cmake`.
 
-```bash
-# Instala o Homebrew (caso não tenha)
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+1.  **Instale as Ferramentas de Linha de Comando do Xcode:**
+    ```bash
+    xcode-select --install
+    ```
 
-# Instala as dependências
-brew install cmake python
-```
+2.  **Instale o Homebrew e o CMake:**
+    Se você não tiver o [Homebrew](https://brew.sh/), instale-o e depois use-o para instalar o `cmake`.
+    ```bash
+    # Instala o Homebrew
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    
+    # Instala o cmake
+    brew install cmake
+    ```
+
+A biblioteca `dlib` será instalada automaticamente pelo `pip` na próxima etapa. O `cmake` e as ferramentas do Xcode são pré-requisitos para que essa instalação funcione.
+
 
 **_Para Windows_**
 
