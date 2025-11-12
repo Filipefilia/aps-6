@@ -1,0 +1,27 @@
+5. RESULTADOS E DISCUSSÕES
+
+Nesta seção, são apresentados os resultados obtidos com a aplicação desenvolvida, seguidos de uma discussão sobre a eficácia, as limitações do sistema e os desafios encontrados durante o projeto.
+
+5.1. Resultados Obtidos
+
+A aplicação final atendeu aos requisitos fundamentais propostos, entregando um sistema funcional de controle de acesso por reconhecimento facial.
+
+1.  **Cadastro de Usuários:** O módulo de cadastro se mostrou eficaz. Ao ser acionado, o sistema captura 20 amostras do rosto do usuário, processa-as para gerar um perfil de codificação facial e armazena o resultado. O processo é rápido e constitui a base de dados para o reconhecimento.
+
+2.  **Reconhecimento em Tempo Real:** O sistema foi capaz de identificar, em tempo real e com sucesso, os usuários previamente cadastrados. Ao reconhecer um rosto, o nome do usuário e seu nível de acesso são exibidos na interface, e uma mensagem de "Acesso Liberado" é mostrada. Para rostos não cadastrados, a mensagem "Acesso Negado" é corretamente exibida.
+
+3.  **Interface Gráfica Funcional:** A interface desenvolvida com Tkinter, embora simples, cumpriu seu papel de fornecer um feedback visual claro para o usuário. A exibição do feed da câmera, juntamente com as mensagens de status dinâmicas, tornou a interação intuitiva.
+
+4.  **Correção de Erros:** Um resultado importante do processo de desenvolvimento foi a capacidade de diagnosticar e corrigir bugs específicos da plataforma. O erro `AttributeError: module 'cv2' has no attribute 'data'`, que ocorria em ambientes macOS, foi solucionado com sucesso, garantindo a portabilidade do programa.
+
+5.2. Discussão
+
+Apesar dos resultados positivos, é importante discutir alguns pontos críticos sobre o funcionamento e as limitações da solução.
+
+*   **Sensibilidade a Condições Externas:** A precisão do reconhecimento facial mostrou-se dependente de fatores ambientais. Variações de iluminação, ângulos de câmera desfavoráveis e oclusões parciais do rosto (como o uso de óculos de grau diferentes dos usados no cadastro) podem diminuir a taxa de sucesso ou aumentar o tempo de detecção.
+
+*   **Desempenho Computacional:** A análise de cada quadro de vídeo é uma tarefa computacionalmente intensiva. Em hardware mais antigo, foi observado um pequeno atraso (latência) entre a imagem real e sua exibição processada na tela. A decisão de processar um a cada quatro quadros foi um paliativo eficaz para manter a fluidez sem sacrificar excessivamente a precisão.
+
+*   **Limitações de Segurança (Spoofing):** A maior limitação do sistema em seu estado atual é a vulnerabilidade a ataques de *spoofing*. A tecnologia utilizada não diferencia um rosto real de uma fotografia ou vídeo de alta qualidade. Portanto, um indivíduo mal-intencionado poderia, teoricamente, burlar o sistema utilizando a foto de um usuário autorizado. Para um ambiente de produção real, seria indispensável implementar uma camada de "detecção de vivacidade" (*liveness detection*).
+
+*   **Escalabilidade do Modelo de Dados:** O armazenamento de dados em arquivos (`.npy`) dentro de pastas é funcional para um número pequeno de usuários. No entanto, essa abordagem não é escalável. Com centenas ou milhares de usuários, o tempo de carregamento e comparação dos dados se tornaria um gargalo. Uma solução mais robusta envolveria o uso de um banco de dados otimizado para buscas.

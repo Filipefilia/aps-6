@@ -1,0 +1,42 @@
+4. DESENVOLVIMENTO
+
+Esta seção detalha o processo de criação da aplicação de reconhecimento facial, desde o planejamento inicial até a estrutura final do software, seguindo uma abordagem baseada no padrão MVC (Model-View-Controller) para organizar o código de forma clara e modular.
+
+4.1. Plano de Desenvolvimento da Aplicação
+
+O desenvolvimento foi dividido em etapas lógicas para garantir que todos os requisitos do projeto fossem atendidos de maneira incremental.
+
+1.  **Análise de Requisitos e Definição da Arquitetura:** A primeira fase consistiu em estudar a proposta do projeto (descrita no arquivo `APS - 5o e 6o CC 2024.2 - PIVC ChaTatPar-1.pdf`) para extrair os requisitos funcionais: cadastro de usuários com diferentes níveis de acesso, reconhecimento facial em tempo real e exibição de status na tela. Com base nisso, foi definida uma arquitetura MVC para separar a lógica de dados (Model), a interface do usuário (View) e as regras de negócio (Controller).
+
+2.  **Seleção de Tecnologias:** Foram escolhidas bibliotecas Python adequadas para cada parte do projeto:
+    *   **OpenCV (`cv2`):** Para captura e manipulação de vídeo da webcam.
+    *   **face_recognition:** Para a lógica principal de detecção de rostos e comparação de características faciais.
+    *   **Tkinter:** Para a criação da interface gráfica (GUI) de forma nativa no Python.
+    *   **NumPy:** Para manipulação eficiente dos arrays de codificações faciais.
+
+3.  **Implementação do Módulo de Cadastro (Controller/Model):** Foi desenvolvido o script `register_user.py`, responsável por capturar 20 imagens do rosto de um novo usuário, extrair as codificações faciais e salvá-las em um arquivo `encodings.npy` dentro de uma pasta específica para aquele usuário no diretório `dataset/`.
+
+4.  **Implementação do Módulo de Reconhecimento (Controller):** O script `recognize_user.py` foi criado para processar cada quadro (frame) do vídeo. Ele detecta rostos, compara suas codificações com as que estão salvas no `dataset/` e retorna o nome e o nível de acesso do usuário reconhecido.
+
+5.  **Desenvolvimento da Interface Gráfica (View):** Utilizando Tkinter, o arquivo `app_gui.py` foi implementado para construir a janela principal da aplicação, contendo a área de exibição do vídeo, os botões de "Cadastrar" e "Sair", e os rótulos para exibir mensagens de status e o nível de acesso.
+
+6.  **Integração e Testes:** O arquivo `main.py` foi criado para ser o ponto de entrada, inicializando a GUI e o loop de vídeo. Foram realizados testes iterativos para corrigir bugs, como o erro `AttributeError: module 'cv2' has no attribute 'data'`, que foi solucionado ajustando a forma como o classificador de cascata Haar era carregado.
+
+4.2. Projeto (Estrutura) do Programa
+
+O projeto foi organizado utilizando o padrão de arquitetura MVC (Model-View-Controller) para garantir a separação de responsabilidades e facilitar a manutenção do código.
+
+*   **Model (Modelo):** A camada de dados é representada pelo diretório `dataset/`. Cada subdiretório (ex: `access_level2-pedro/`) representa um usuário e contém o arquivo `encodings.npy`, que armazena as características faciais codificadas. Essa estrutura funciona como o "banco de dados" da aplicação.
+
+*   **View (Visão):** A camada de apresentação é implementada no arquivo `view/app_gui.py`. Este módulo é totalmente responsável pela interface gráfica com o usuário, exibindo o feed da câmera, os botões e as mensagens de texto. Ele não contém nenhuma lógica de negócio, apenas invoca funções do Controller em resposta a ações do usuário (como cliques de botão).
+
+*   **Controller (Controlador):** A camada de controle é composta pelos scripts no diretório `controller/`.
+    *   `register_user.py`: Contém a lógica para cadastrar um novo usuário.
+    *   `recognize_user.py`: Contém a lógica para processar os quadros de vídeo e identificar usuários.
+    *   Esses scripts atuam como uma ponte entre o Model (os dados em `dataset/`) e a View (a interface em `app_gui.py`), aplicando as regras de negócio do sistema.
+
+*   **Ponto de Entrada:** O arquivo `main.py` na raiz do projeto é o script principal que inicializa e conecta todas as partes, dando início à execução da aplicação.
+
+*   **Configuração:** A pasta `config/` armazena configurações globais, como o caminho para o classificador Haar, permitindo que sejam facilmente alteradas sem modificar o código principal.
+
+Essa estrutura modular permitiu um desenvolvimento organizado e torna o sistema mais fácil de entender, depurar e expandir no futuro.
