@@ -69,13 +69,20 @@ def load_known_faces():
 
     return known_face_encodings, known_face_names, known_face_access_levels
 
-def process_frame_for_recognition(frame, known_face_encodings, known_face_names, known_face_access_levels):
+def process_frame_for_recognition(frame, known_face_encodings, known_face_names, known_face_access_levels, draw_annotations=True):
     """
     Processes a single frame to detect and recognize faces and facial landmarks.
     
+    Args:
+        frame: The input frame to process
+        known_face_encodings: List of known face encodings
+        known_face_names: List of corresponding names
+        known_face_access_levels: List of corresponding access levels
+        draw_annotations: Whether to draw rectangles and names on the frame (default: True)
+    
     Returns:
         A tuple containing:
-        - The processed frame with rectangles and names drawn on it.
+        - The processed frame (with or without rectangles and names drawn on it).
         - The name of the recognized person ("Unknown" if not recognized).
         - The access level of the recognized person ("" if not recognized).
         - The average Eye Aspect Ratio (EAR) of the detected face.
@@ -83,12 +90,18 @@ def process_frame_for_recognition(frame, known_face_encodings, known_face_names,
     """
     TOLERANCE = 0.6
     
-    # Convert frame to RGB for face_recognition library
-    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    # Convert frame to RGB for face_recognition library (moderate resize for performance)
+    small_frame = cv2.resize(frame, (0, 0), fx=0.75, fy=0.75)
+    rgb_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
     
-    # Find all face locations and landmarks in the current frame
+    # Find all face locations and landmarks in the resized frame
     face_locations = face_recognition.face_locations(rgb_frame)
     face_landmarks_list = face_recognition.face_landmarks(rgb_frame, face_locations)
+    
+    # Scale back face locations to original frame size
+    scale_factor = 1.0 / 0.75
+    face_locations = [(int(top*scale_factor), int(right*scale_factor), int(bottom*scale_factor), int(left*scale_factor)) 
+                     for (top, right, bottom, left) in face_locations]
     
     recognized_name = "Unknown"
     recognized_access_level = ""
@@ -100,8 +113,16 @@ def process_frame_for_recognition(frame, known_face_encodings, known_face_names,
         face_location = face_locations[0]
         face_landmarks = face_landmarks_list[0]
 
-        # Get encoding for the current face
-        current_face_encodings = face_recognition.face_encodings(rgb_frame, [face_location])
+        # Scale landmarks back to original frame size
+        scale_factor = 1.0 / 0.75
+        scaled_landmarks = {}
+        for feature_name, points in face_landmarks.items():
+            scaled_landmarks[feature_name] = [(int(x*scale_factor), int(y*scale_factor)) for (x, y) in points]
+
+        # Get encoding for the current face from small frame
+        small_face_location = (int(face_location[0]/scale_factor), int(face_location[1]/scale_factor), 
+                              int(face_location[2]/scale_factor), int(face_location[3]/scale_factor))
+        current_face_encodings = face_recognition.face_encodings(rgb_frame, [small_face_location])
 
         name = "Unknown"
         access_level = ""
@@ -116,18 +137,19 @@ def process_frame_for_recognition(frame, known_face_encodings, known_face_names,
         recognized_name = name
         recognized_access_level = access_level
 
-        # Calculate EAR and MAR
-        left_eye_ear = _calculate_ear(face_landmarks['left_eye'])
-        right_eye_ear = _calculate_ear(face_landmarks['right_eye'])
+        # Calculate EAR and MAR using scaled landmarks
+        left_eye_ear = _calculate_ear(scaled_landmarks['left_eye'])
+        right_eye_ear = _calculate_ear(scaled_landmarks['right_eye'])
         ear = (left_eye_ear + right_eye_ear) / 2.0
-        mar = _calculate_mar(face_landmarks['top_lip'] + face_landmarks['bottom_lip'])
+        mar = _calculate_mar(scaled_landmarks['top_lip'] + scaled_landmarks['bottom_lip'])
 
-        # Draw rectangle and name on the frame
-        top, right, bottom, left = face_location
-        cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
-        cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
-        font = cv2.FONT_HERSHEY_DUPLEX
-        cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+        # Draw rectangle and name on the frame only if annotations are enabled
+        if draw_annotations:
+            top, right, bottom, left = face_location
+            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+            font = cv2.FONT_HERSHEY_DUPLEX
+            cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
 
     return frame, recognized_name, recognized_access_level, ear, mar
 
@@ -140,7 +162,7 @@ def recognize_faces_in_video():
     if not known_face_names:
         return
 
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(2)
     if not cap.isOpened():
         print("[ERROR] Could not open camera")
         return
