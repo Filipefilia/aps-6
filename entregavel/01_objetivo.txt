@@ -1,0 +1,9 @@
+O objetivo deste projeto é o desenvolvimento de um sistema de identificação e autenticação biométrica por meio de reconhecimento facial. O sistema deverá ser capaz de operar em tempo real, identificando e autentic-ando usuários para controlar o acesso a um ambiente seguro, baseado em um esquema de três níveis de permissão.
+
+O cenário proposto para este sistema é o controle de acesso a um cofre de segurança máxima no Ministério do Meio Ambiente. Este cofre guarda informações sigilosas sobre toxinas que, se manuseadas indevidamente, representam um risco em escala global. Portanto, a segurança de acesso é de suma importância.
+
+Nível 1: Acesso geral.
+Nível 2: Acesso restrito a diretores de divisões.
+Nível 3: Acesso exclusivo ao Ministro do Meio Ambiente.
+
+O projeto visa aplicar os conceitos da disciplina de Processamento de Imagem e Visão Computacional (PIVC) para criar uma solução robusta, funcional e bem documentada, que sirva como uma barreira de segurança eficaz.

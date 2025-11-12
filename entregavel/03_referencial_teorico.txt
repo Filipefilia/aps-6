@@ -1,0 +1,21 @@
+3. REFERENCIAL TEÓRICO
+
+Para a concepção e desenvolvimento deste projeto, foi necessária a utilização de uma combinação de tecnologias e conceitos de programação que, juntos, formam a base para o sistema de reconhecimento facial e controle de acesso. Este referencial teórico detalha as principais ferramentas e bibliotecas empregadas.
+
+3.1. Python
+
+Python é uma linguagem de programação de alto nível, interpretada, de script, imperativa, orientada a objetos, funcional, de tipagem dinâmica e forte. Foi escolhida como a linguagem principal para este projeto devido à sua sintaxe simples e legível, vasta gama de bibliotecas para processamento de imagem e desenvolvimento de interfaces gráficas, e uma comunidade ativa que oferece amplo suporte. A flexibilidade do Python permitiu integrar facilmente os diferentes componentes do sistema, desde a captura de vídeo até a lógica de controle de acesso.
+
+3.2. OpenCV
+
+OpenCV (Open Source Computer Vision Library) é uma biblioteca de código aberto, multiplataforma, focada em aplicações de visão computacional em tempo real. No projeto, o OpenCV é fundamental para a captura e manipulação de imagens da webcam. Suas funções permitem ler o fluxo de vídeo, converter os quadros (frames) para o formato de cores adequado (BGR para RGB) e exibir o vídeo processado na interface gráfica. É a espinha dorsal de toda a operação que envolve a câmera.
+
+3.3. Biblioteca face_recognition
+
+A biblioteca `face_recognition` é uma das mais populares e acessíveis para implementar reconhecimento facial em Python. Construída sobre o `dlib`, ela oferece uma API de alto nível para localizar rostos em imagens, identificar pontos de referência faciais (como olhos, nariz e boca) e, mais importante, comparar rostos.
+
+O funcionamento se baseia na geração de um "encoding" facial, que é uma representação matemática única do rosto em um vetor de 128 dimensões. Ao comparar o encoding de um rosto detectado na câmera com os encodings previamente cadastrados no sistema, é possível determinar a identidade da pessoa com um certo grau de confiança. Esta biblioteca simplifica um processo complexo, tornando o reconhecimento facial uma tarefa programaticamente acessível.
+
+3.4. Tkinter
+
+Tkinter é a biblioteca padrão do Python para a criação de interfaces gráficas de usuário (GUI). Embora existam frameworks mais modernos, o Tkinter foi escolhido por sua simplicidade, por já vir incluído na instalação padrão do Python e por ser suficiente para as necessidades deste projeto. Com ele, foram construídas a janela principal da aplicação, os botões de "Registrar" e "Sair", e a área de exibição do vídeo da câmera. A integração do vídeo do OpenCV com a interface do Tkinter foi um dos desafios técnicos do desenvolvimento, solucionado através da atualização contínua de um `Label` com os quadros processados da câmera.

@@ -6,6 +6,8 @@ from pathlib import Path
 import face_recognition
 from config.config import DATASET_DIR
 import tkinter as tk
+from PIL import Image, ImageEnhance, ImageFilter
+import random
 
 # constant setups
 PICTURE_QT = 20
@@ -13,6 +15,69 @@ CAPTURE_LAPSE = 1.0
 CAPTURE_PREPARATION = 3
 MIN_WIDHT = 150
 MIN_HEIGHT = 150
+
+# Data Augmentation settings
+AUGMENTATION_FACTOR = 4  # Generate 4 augmented versions per original
+ENABLE_AUGMENTATION = True
+
+def set_augmentation_level(level="standard"):
+    """
+    Configure augmentation level based on requirements.
+    Levels: 'basic' (2x), 'standard' (4x), 'enhanced' (6x), 'maximum' (8x)
+    """
+    global AUGMENTATION_FACTOR
+    levels = {
+        'basic': 2,
+        'standard': 4, 
+        'enhanced': 6,
+        'maximum': 8
+    }
+    AUGMENTATION_FACTOR = levels.get(level, 4)
+    print(f"[INFO] Augmentation level set to '{level}' ({AUGMENTATION_FACTOR}x factor)")
+    return AUGMENTATION_FACTOR
+
+def apply_data_augmentation(image):
+    """
+    Apply various augmentation techniques to improve dataset diversity and robustness.
+    Returns a list of augmented images including the original.
+    """
+    augmented_images = [image]  # Start with original
+    
+    if not ENABLE_AUGMENTATION:
+        return augmented_images
+    
+    # Convert to PIL for easier manipulation
+    pil_image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    
+    # 1. Brightness variations (simulate different lighting conditions)
+    brightness_variations = [0.7, 0.85, 1.15, 1.3]
+    for brightness in brightness_variations[:2]:  # Use 2 variations
+        enhancer = ImageEnhance.Brightness(pil_image)
+        bright_img = enhancer.enhance(brightness)
+        augmented_images.append(cv2.cvtColor(np.array(bright_img), cv2.COLOR_RGB2BGR))
+    
+    # 2. Contrast adjustments (improve robustness to different cameras)
+    contrast_variations = [0.8, 1.2]
+    for contrast in contrast_variations:
+        enhancer = ImageEnhance.Contrast(pil_image)
+        contrast_img = enhancer.enhance(contrast)
+        augmented_images.append(cv2.cvtColor(np.array(contrast_img), cv2.COLOR_RGB2BGR))
+    
+    # 3. Slight rotations (head pose variations)
+    rotation_angles = [-5, 5]
+    for angle in rotation_angles:
+        rotated = pil_image.rotate(angle, expand=False, fillcolor=(128, 128, 128))
+        augmented_images.append(cv2.cvtColor(np.array(rotated), cv2.COLOR_RGB2BGR))
+    
+    # 4. Gaussian blur (simulate slight motion or focus issues)
+    blurred = pil_image.filter(ImageFilter.GaussianBlur(radius=0.5))
+    augmented_images.append(cv2.cvtColor(np.array(blurred), cv2.COLOR_RGB2BGR))
+    
+    # 5. Horizontal flip (mirror image for additional variation)
+    flipped = pil_image.transpose(Image.FLIP_LEFT_RIGHT)
+    augmented_images.append(cv2.cvtColor(np.array(flipped), cv2.COLOR_RGB2BGR))
+    
+    return augmented_images[:AUGMENTATION_FACTOR + 1]  # Return original + augmentations
 
 # user dir setup
 def create_new_user(user_name, access_level):
@@ -31,7 +96,7 @@ def create_new_user(user_name, access_level):
     return path_user_dir
 
 def register_user_face(user_dir):
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(2)
 
     if not cap.isOpened():
         print("[ERROR] Could not open camera")
@@ -170,32 +235,59 @@ def auto_register_user_face(user_dir, cap):
         cv2.addWeighted(overlay, 0.6, frame, 0.4, 0, frame)
 
         # Draw centered text
-        cv2.putText(frame, "Move your head slowly", (int(w/2) - 250, 35), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-        cv2.putText(frame, f"Capturing: {count_encodings + 1}/{PICTURE_QT}", (int(w/2) - 150, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        cv2.putText(frame, "Move your head slowly", (int(w/2) - 250, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
+        cv2.putText(frame, f"Capturing: {count_encodings + 1}/{PICTURE_QT}", (int(w/2) - 150, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
+        cv2.putText(frame, f"Enhanced Dataset: {len(known_encodings)} encodings", (int(w/2) - 200, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
 
         cv2.imshow(window_name, frame)
 
         current_time = time.time()
         if (current_time - last_capture_time) >= CAPTURE_LAPSE:
             if len(faces) > 0:
-                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                face_location = (y, x + w_face, y + h_face, x)
-                encodings = face_recognition.face_encodings(rgb_frame, [face_location])
+                # Extract face region for augmentation
+                face_region = frame[y:y+h_face, x:x+w_face]
                 
-                if encodings:
-                    known_encodings.append(encodings[0])
-                    print(f"[INFO] Encoding {count_encodings + 1} captured")
+                # Apply data augmentation
+                augmented_faces = apply_data_augmentation(face_region)
+                print(f"[INFO] Generated {len(augmented_faces)} variations for capture {count_encodings + 1}")
+                
+                # Process each augmented version
+                encodings_batch = []
+                for idx, aug_face in enumerate(augmented_faces):
+                    # Resize to consistent size for better encoding
+                    aug_face_resized = cv2.resize(aug_face, (160, 160))
+                    rgb_aug_face = cv2.cvtColor(aug_face_resized, cv2.COLOR_BGR2RGB)
+                    
+                    # Get face locations in the resized image
+                    face_locations = face_recognition.face_locations(rgb_aug_face)
+                    if face_locations:
+                        encodings = face_recognition.face_encodings(rgb_aug_face, face_locations)
+                        if encodings:
+                            encodings_batch.extend(encodings)
+                            if idx == 0:
+                                print(f"[INFO] Original encoding {count_encodings + 1} captured")
+                            else:
+                                print(f"[INFO] Augmented encoding {count_encodings + 1}.{idx} captured")
+                
+                # Add all successful encodings
+                if encodings_batch:
+                    known_encodings.extend(encodings_batch)
                     count_encodings += 1
                     last_capture_time = current_time
+                    print(f"[INFO] Total encodings so far: {len(known_encodings)}")
+                else:
+                    print(f"[WARNING] No valid encodings generated for capture {count_encodings + 1}")
         
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     
     if count_encodings > 0:
-        print(f"\n[SUCCESS] {count_encodings} encodings captured.")
+        print(f"\n[SUCCESS] {count_encodings} original captures processed.")
+        print(f"[SUCCESS] {len(known_encodings)} total encodings generated (including augmentations).")
         encodings_path = user_dir / "encodings.npy"
         np.save(encodings_path, np.array(known_encodings))
-        print(f"[INFO] Encodings saved to {encodings_path}")
+        print(f"[INFO] Enhanced dataset with {len(known_encodings)} encodings saved to {encodings_path}")
+        print(f"[INFO] Augmentation factor: {len(known_encodings)/count_encodings:.1f}x improvement")
     else:
         print("\n[ERROR] No encodings were captured. Please try again.")
 
